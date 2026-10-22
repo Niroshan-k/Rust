@@ -14,7 +14,7 @@ fn main() {
     r = &b;
     dbg!(r);
 
-    *r = 'X';
+    //*r = 'X'; // a shared references does not allow modifying the value it refers to, even if that value mutable
 }
 
 // a shared reference to a type T has type &T.

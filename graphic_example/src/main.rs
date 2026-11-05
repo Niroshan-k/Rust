@@ -4,6 +4,20 @@ struct Shape {
     size: f32, speed: f32, x: f32, y: f32, color: Color,
 }
 
+impl Shape {
+    fn collides_with(&self, other: &Self) -> bool {
+        self.rect().overlaps(&other.rect())
+    }
+
+    fn rect(&self) -> Rect {
+        Rect {
+            x: self.x - self.size / 2.0,
+            y: self.y - self.size / 2.0,
+            w: self.size, h: self.size
+        }
+    }
+}
+
 #[macroquad::main("My game")]
 async fn main() {
 
@@ -26,16 +40,13 @@ async fn main() {
         color: color
     };
 
+    let mut gameover = false;
+
     rand::srand(miniquad::date::now() as u64);
 
     loop {
         clear_background(DARKPURPLE);
-
-        if is_key_down(KeyCode::Right) { circle.x+= smooth_fac; }
-        if is_key_down(KeyCode::Left) { circle.x-= smooth_fac; }
-        if is_key_down(KeyCode::Down) { circle.y+= smooth_fac; }
-        if is_key_down(KeyCode::Up) { circle.y-= smooth_fac; }
-
+        
         circle.x = clamp(circle.x, 0.0 + 16.0, screen_width() - 16.0);
         circle.y = clamp(circle.y, 0.0 + 16.0, screen_height() -16.0);
 
@@ -59,8 +70,26 @@ async fn main() {
             })
         }
 
-        for squre in &mut squares {
-            squre.y += squre.speed * delta_time;
+        if !gameover {
+            if is_key_down(KeyCode::Right) { circle.x+= smooth_fac; }
+            if is_key_down(KeyCode::Left) { circle.x-= smooth_fac; }
+            if is_key_down(KeyCode::Down) { circle.y+= smooth_fac; }
+            if is_key_down(KeyCode::Up) { circle.y-= smooth_fac; }
+
+            for squre in &mut squares {
+                squre.y += squre.speed * delta_time;
+            }
+        }
+
+        if squares.iter().any(|square| circle.collides_with(square)) {
+            gameover = true;
+        }
+
+        if gameover && is_key_pressed(KeyCode::Space) {
+            squares.clear();
+            circle.x = screen_width() / 2.0;
+            circle.y = screen_height() / 2.0;
+            gameover = false;
         }
 
         // remove squares
@@ -72,6 +101,15 @@ async fn main() {
                 squre.y - squre.size / 2.0,
                 squre.size, squre.size, 
                 squre.color
+            );
+        }
+
+        if gameover {
+            let text = "GAME OVER!";
+            let text_dimensions = measure_text(text, None, 50, 1.0);
+            draw_text(
+                text, screen_width() / 2.0 - text_dimensions.width / 2.0,
+                screen_height() / 2.0, 50.0, RED
             );
         }
         next_frame().await;

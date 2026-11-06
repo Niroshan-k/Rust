@@ -1,3 +1,4 @@
+use std::mem::transmute;
 // enum keyword allows the creation of a 
 // type which has a few different variants:
 
@@ -53,6 +54,12 @@ becomes 10000 + 1 = 10001.
 
  */
 
+macro_rules! dbg_bits {
+    ($e:expr, $bit_type:ty) => {
+        println!("- {}: {:#x}", stringify!($e), transmute::<_, $bit_type>($e));
+    };
+}
+
 fn main() {
     let dir = Direction::Left;
     let player_move: PlayerMove = PlayerMove::Run(dir);
@@ -61,6 +68,30 @@ fn main() {
     println!("A: {}", Bar::A as u32);
     println!("B: {}", Bar::B as u32);
     println!("C: {}", Bar::C as u32);
+
+    /*
+     * null pointer optimization >
+     - for some types, rust gurantees that 
+       size_of::<T>() equal to size_of::<Option<T>>()
+     */
+
+    unsafe {
+        println!("bool:");
+        dbg_bits!(false, u8);
+        dbg_bits!(true, u8);
+        println!("Option<bool>:");
+        dbg_bits!(None::<bool>, u8);
+        dbg_bits!(Some(false), u8);
+        dbg_bits!(Some(true), u8);
+        println!("Option<Option<bool>>:");
+        dbg_bits!(Some(Some(false)), u8);
+        dbg_bits!(Some(Some(true)), u8);
+        dbg_bits!(Some(None::<bool>), u8);
+        dbg_bits!(None::<Option<bool>>, u8);
+        println!("Option<&i32>:");
+        dbg_bits!(None::<&i32>, usize);
+        dbg_bits!(Some(&0i32), usize);
+    }
 }
 
 /*
@@ -98,7 +129,7 @@ is zero overhead for the Option wrapper.
     * how can rust use a null references if safe rust doesn't allow them?
     1. in safe rust:
     you are strictly forbidden from creating or using a null reference.
-    2. at the machine level [under the hoos]:
+    2. at the machine level [under the hoods]:
     computers don't know what "rust" is; they just see raw memory address 
     (numbers like 0x0, 0x7FFF, etc). address 0x0 (zero) is the classic 
     "null pointer" in Computer Science.

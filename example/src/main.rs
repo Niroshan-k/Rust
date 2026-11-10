@@ -1,3 +1,4 @@
+
 fn main() {
     // 1. Create a raw pointer pointing to memory address 0 (null)
     let null_ptr: *mut u8 = std::ptr::null_mut();
@@ -14,3 +15,4 @@ fn main() {
         println!("The value is: {}", val);
     }
 }
+

@@ -6,27 +6,31 @@ impl Solution {
         
         let byte = s.as_bytes();
         let mut stack = Vec::new();
-
         let left = [40, 123, 91];
         let right = [41 , 125, 93];
-
-        if right.contains(&byte[0]) {
-            return false;
-        }
         
-        for i in 0..(byte.len() + 1) {
+        for i in 0..byte.len() {
             if left.contains(&byte[i]) {
                 stack.push(byte[i]);
-            }
+            } else if right.contains(&byte[i]) {
+                let Some(last) = stack.pop() else {
+                    return false;
+                };
+                let mut matched = false;
+                for j in 0..3 {
+                    if left[j] == last && byte[i] == right[j] {
+                        matched = true;
+                        break; // stop checking once matched
+                    }
+                }
 
-            if right.contains(&byte[i]) {
-                stack.last()
-            }
+                if !matched { return false; }
+            }  
         }
-        true
+        stack.is_empty()
     }
 }
 
 fn main() {
-    println!("\n{}", Solution::is_valid(String::from("()")));
+    println!("\n{}", Solution::is_valid(String::from("{}")));
 }
